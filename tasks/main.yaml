@@ -1,0 +1,82 @@
+---
+- name: Install cups, avahi etc
+  apt:
+    update_cache: yes
+    name: "{{ item }}"
+    state: present
+  loop:
+    - avahi-daemon
+    - cups
+    - cups-pdf
+    - python-cups
+    - libnss-mdns
+
+- name: Install Google Cloud Print Connector
+  apt:
+    name: google-cloud-print-connector 
+
+- name: Enable cups on the network
+  shell: cupsctl --remote-admin --remote-any --share-printers
+
+- name: Install airprint-generate.py
+  copy:
+    src: airprint-generate.py
+    dest: /usr/local/bin/airprint-generate.py
+    mode: "0755"
+
+- name: gcp config dir
+  file:
+    name: /etc/gcp
+    state: directory
+    owner: root
+    mode: "0755"
+
+- name: Create gcp service
+  copy:
+    dest: /etc/systemd/system/gcp-cups-connector.service
+    mode: "0644"
+    owner: root
+    content: |
+      [Unit]
+      Description=Google Cloud Print Cups Connector
+      After=network.target auditd.service
+      ConditionPathExists=/etc/gcp/gcp-cups-connector.config.json
+
+      [Service]
+      ExecStart=/usr/bin/gcp-cups-connector --config-filename /etc/gcp/gcp-cups-connector.config.json
+      ExecReload=/bin/kill -HUP $MAINPID
+      KillMode=process
+      Restart=on-failure
+      RestartPreventExitStatus=255
+      Type=simple
+
+      [Install]
+      WantedBy=multi-user.target
+      Alias=gcp-cups-connector.service
+
+- name: Setup gcp daemon
+  systemd:
+    name: gcp-cups-connector.service
+    enabled: yes
+    daemon_reload: yes
+    state: reloaded # not required. choices: reloaded;restarted;started;stopped. C(started)/C(stopped) are idempotent actions that will not run commands unless necessary. C(restarted) will always bounce the service. C(reloaded) will always reload.
+
+- name: Is GCP configured?
+  stat:
+    path: /etc/gcp/gcp-cups-connector.config.json
+  register: gcp
+
+- name: Tell about gcp
+  debug:
+    msg: |
+      SSH to {{ ansible_host }} and run
+
+        cd /etc/gcp && sudo gcp-connector-util i
+
+      to setup Google Cloud Print with your account. When done, run this playbook again.
+  when: gcp.stat.exists == False
+
+- name: Tell about how to setup printers
+  debug:
+    msg: |
+      To setup printers in cups, go to http://{{ ansible_default_ipv4.address }}:631

@@ -1,0 +1,14 @@
+galaxy_info:
+    description: AirPrint Server and Google Cloud Print Connector using CUPS
+    author: Jens Hilligsøe
+    license: MIT
+    min_ansible_version: 2.7
+    platforms:
+    - name: Debian
+      versions:
+      - all
+    galaxy_tags:
+      - airprint
+      - gcp
+      - google
+      - print
