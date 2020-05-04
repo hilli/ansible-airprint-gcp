@@ -18,12 +18,6 @@
 - name: Enable cups on the network
   shell: cupsctl --remote-admin --remote-any --share-printers
 
-- name: Install airprint-generate.py
-  copy:
-    src: airprint-generate.py
-    dest: /usr/local/bin/airprint-generate.py
-    mode: "0755"
-
 - name: gcp config dir
   file:
     name: /etc/gcp
