@@ -27,5 +27,8 @@ Add the role to your playbook:
   become: yes
 
   roles:
-    - role: airprint-gcp
+    - airprint-gcp
 ```
+
+To get credentials for the Google Cloud Print, the playbook will instruct you to ssh to the server and create an OAuth token for GCP. Rerun the playbook to restart the Google Cloud Print daemon afterward.
+Also you will be using the CUPS admin interface to setup your printers - You will be handed a URL for that.
